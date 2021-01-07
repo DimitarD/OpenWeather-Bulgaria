@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<title>Weather in Bulgaria</title>
+<script type="text/javascript" src="index.js"></script>
+<link type="text/css" rel="Stylesheet" href="index.css" />
+
+<body>
+    <h3>Weather in Bulgaria on <span id="dateLabel"></span></h3>
+
+    <div id="mapContainer">
+        <div id="popup" class="hidden">
+            <div id="popupHeader"></div>
+            <div>
+                <div>Temperature</div>
+                <div id="popupTemperature"></div>
+                <div>Humidity</div>
+                <div id="popupHumidity"></div>
+                <div>Precipitation</div>
+                <div id="popupPrecipitation"></div>
+            </div>
+        </div>
+    </div>
+
+    <label for="forecastSlider" id="forecastSliderLabel">Slide to view weather forecast:</label>
+    <div id="forecastSliderContainer">
+        <input type="range" id="forecastSlider" min="0" max="5" value="0" list="tickmarks" />
+        <div id="forecastSliderLabelsContainer">
+            <div id="startDate"></div>
+            <div id="endDate"></div>
+        </div>
+    </div>
+
+    <datalist id="tickmarks">
+        <option value="0"></option>
+        <option value="1"></option>
+        <option value="2"></option>
+        <option value="3"></option>
+        <option value="4"></option>
+        <option value="5"></option>
+    </datalist>
+</body>
+
+</html>
