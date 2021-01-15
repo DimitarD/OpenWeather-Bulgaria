@@ -26,6 +26,22 @@ class Popup extends React.Component {
     }
 }
 
+class WeatherIcon extends React.Component {
+    render() {
+        return (
+            <div
+                className="weather-icon"
+                style={{
+                    backgroundImage: `url("http://openweathermap.org/img/wn/${this.props.image}.png")`,
+                    top: this.props.top,
+                    left: this.props.left,
+                }}
+                cityid={this.props.cityId}
+            />
+        )
+    }
+}
+
 class Slider extends React.Component {
     render() {
         const min = this.props.min;
@@ -66,9 +82,8 @@ class App extends React.Component {
                 top: 0,
                 visible: false
             },
+            icons: []
         };
-
-        this.mapContainer = React.createRef();
     }
 
     componentDidMount() {
@@ -129,7 +144,7 @@ class App extends React.Component {
         }
 
         this.setState({
-            cityInfo: this.cityInfo[clickedIcon.cityId],
+            cityInfo: this.cityInfo[clickedIcon.getAttribute('cityid')],
             popupSettings: {
                 left: clickedIcon.style.left,
                 top: clickedIcon.style.top,
@@ -140,15 +155,26 @@ class App extends React.Component {
 
     sliderChangeHandler(event) {
         const dayIndex = parseFloat(event.target.value);
+        const previousIcons = this.state.icons.slice(0);
 
         this.setState({ dayIndex });
 
         // updates icons for weather on selected day
-        Object.keys(this.cityInfo).forEach((currentCityId) => {
-            const icon = document.getElementById('icon' + currentCityId);
+        const icons = Object.keys(this.cityInfo).map((currentCityId, index) => {
+            const previousIcon = previousIcons[index];
 
-            icon.style.backgroundImage = `url("http://openweathermap.org/img/wn/${this.cityInfo[currentCityId].weatherData[dayIndex].weather[0].icon}.png")`;
+            return (
+                <WeatherIcon
+                    image={this.cityInfo[currentCityId].weatherData[dayIndex].weather[0].icon}
+                    top={previousIcon.props.top + 'px'}
+                    left={previousIcon.props.left + 'px'}
+                    cityId={currentCityId}
+                    key={currentCityId}
+                />
+            );
         });
+
+        this.setState({ icons });
     }
 
     getForecast() {
@@ -178,23 +204,24 @@ class App extends React.Component {
     }
 
     createIcons(data) {
-        data.list.forEach((cityData) => {
+        const icons = this.state.icons.concat(data.list.map((cityData) => {
             const cityId = cityData.id;
-            const iconElement = document.createElement('div');
             const { top, left } = this.cityInfo[cityId];
 
-            iconElement.id = 'icon' + cityId;
-            iconElement.className = 'weather-icon';
-            iconElement.style.backgroundImage = `url("http://openweathermap.org/img/wn/${cityData.weather[0].icon}.png")`;
-            iconElement.style.left = left + 'px';
-            iconElement.style.top = top + 'px';
-
-            iconElement.cityId = cityId;
-
-            this.mapContainer.current.appendChild(iconElement);
-
             this.cityInfo[cityId].weatherData.push(cityData);
-        });
+
+            return (
+                <WeatherIcon
+                    image={cityData.weather[0].icon}
+                    top={top + 'px'}
+                    left={left + 'px'}
+                    cityId={cityId}
+                    key={cityId}
+                />
+            )
+        }));
+
+        this.setState({ icons });
     }
 
     getCurrentWeather() {
@@ -224,8 +251,9 @@ class App extends React.Component {
             <div>
                 <h3>Weather in Bulgaria on <span id="dateLabel">{currentDateLabel}</span></h3>
 
-                <div id="mapContainer" ref={this.mapContainer}>
+                <div id="mapContainer">
                     <Popup cityInfo={this.state.cityInfo} dayIndex={this.state.dayIndex} visualSettings={this.state.popupSettings} />
+                    {this.state.icons}
                 </div>
 
                 <Slider min="0" max="5" value={this.state.dayIndex} onChange={(event) => this.sliderChangeHandler(event)} />
