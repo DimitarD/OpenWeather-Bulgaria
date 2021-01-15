@@ -4,20 +4,26 @@ import './index.css';
 
 const today = new Date();
 
-function Popup(props) {
-    return (
-        <div id="popup" className="hidden">
-            <div id="popupHeader"></div>
-            <div>
-                <div>Temperature</div>
-                <div id="popupTemperature"></div>
-                <div>Humidity</div>
-                <div id="popupHumidity"></div>
-                <div>Precipitation</div>
-                <div id="popupPrecipitation"></div>
-            </div>
-        </div>
-    );
+class Popup extends React.Component {
+    render() {
+        const clickedCityInfo = this.props.cityInfo;
+        const currentWeatherData = clickedCityInfo?.weatherData[this.props.dayIndex];
+        const visualSettings = this.props.visualSettings;
+
+        return (
+            <div id="popup" className={visualSettings.visible ? '' : 'hidden'} style={{ top: visualSettings.top, left: visualSettings.left }}>
+                <div id="popupHeader">{clickedCityInfo?.name}</div>
+                <div>
+                    <div>Temperature</div>
+                    <div id="popupTemperature">{currentWeatherData?.main.temp}°C</div>
+                    <div>Humidity</div>
+                    <div id="popupHumidity">{currentWeatherData?.main.humidity}%</div>
+                    <div>Precipitation</div>
+                    <div id="popupPrecipitation">{currentWeatherData ? (currentWeatherData.rain ? 'rain' : (currentWeatherData.snow ? 'snow' : 'no')) : null}</div>
+                </div>
+            </div >
+        );
+    }
 }
 
 class Slider extends React.Component {
@@ -53,24 +59,19 @@ class App extends React.Component {
         super(props);
 
         this.state = {
-            dayIndex: 0
+            dayIndex: 0,
+            cityInfo: null,
+            popupSettings: {
+                left: 0,
+                top: 0,
+                visible: false
+            },
         };
 
         this.mapContainer = React.createRef();
     }
 
     componentDidMount() {
-        /*    const dateLabel = document.getElementById('dateLabel');
-           const popup = document.getElementById('popup');
-           const popupHeader = document.getElementById('popupHeader');
-           const popupTemperature = document.getElementById('popupTemperature');
-           const popupHumidity = document.getElementById('popupHumidity');
-           const popupPrecipitation = document.getElementById('popupPrecipitation');
-   
-           mapContainer = document.getElementById('mapContainer');
-   
-           requestAnimationFrame(() => popup.classList.add('transition')); */
-
         this.getCurrentWeather();
 
         document.addEventListener('pointerdown', this.documentPointerdownHandler);
@@ -110,8 +111,31 @@ class App extends React.Component {
         725578: { name: 'Yambol', top: 218, left: 399, weatherData: [] }
     }; // codes retrieved from http://bulk.openweathermap.org/sample/city.list.json.gz
 
-    documentPointerdownHandler(event) {
+    documentPointerdownHandler = (event) => {
+        const clickedIcon = event.target.closest('.weather-icon');
 
+        if (!clickedIcon) {
+            if (!event.target.closest('#popup')) {
+                this.setState({
+                    popupSettings: {
+                        left: this.state.popupSettings.left,
+                        top: this.state.popupSettings.top,
+                        visible: false,
+                    },
+                });
+            }
+
+            return;
+        }
+
+        this.setState({
+            cityInfo: this.cityInfo[clickedIcon.cityId],
+            popupSettings: {
+                left: clickedIcon.style.left,
+                top: clickedIcon.style.top,
+                visible: true,
+            },
+        });
     }
 
     sliderChangeHandler(event) {
@@ -201,7 +225,7 @@ class App extends React.Component {
                 <h3>Weather in Bulgaria on <span id="dateLabel">{currentDateLabel}</span></h3>
 
                 <div id="mapContainer" ref={this.mapContainer}>
-                    <Popup />
+                    <Popup cityInfo={this.state.cityInfo} dayIndex={this.state.dayIndex} visualSettings={this.state.popupSettings} />
                 </div>
 
                 <Slider min="0" max="5" value={this.state.dayIndex} onChange={(event) => this.sliderChangeHandler(event)} />
@@ -214,177 +238,3 @@ ReactDOM.render(
     <App />,
     document.getElementById('root')
 );
-
-
-/* function Square(props) {
-    return (
-      <button
-        className={'square' + (props.winning ? ' winning' : '')}
-        onClick={props.onClick}>
-        {props.value}
-      </button>
-    );
-  }
-
-  class Board extends React.Component {
-    renderSquare(i) {
-      return (
-        <Square
-          key={i}
-          value={this.props.squares[i].value}
-          winning={this.props.squares[i].winning}
-          onClick={() => this.props.onClick(i)}
-        />
-      );
-    }
-
-    render() {
-      const structure = [];
-
-      for (let i = 0; i < 3; i++) {
-        const innerStructure = [];
-
-        for (let j = 0; j < 3; j++) {
-          innerStructure.push(this.renderSquare(3 * i + j));
-        }
-
-        structure.push(<div key={i} className="board-row">{innerStructure}</div>);
-      }
-
-      return (
-        <div>{structure}</div>
-      );
-    }
-  }
-
-  class Game extends React.Component {
-    constructor(props) {
-      super(props);
-      this.state = {
-        history: [{
-          squares: Array(9).fill(null).map(value => ({ value: value, winning: false })), row: null, col: null
-        }],
-        stepNumber: 0,
-        xIsNext: true,
-        order: 'asc',
-      }
-    }
-
-    handleClick(i) {
-      const history = this.state.history.slice(0, this.state.stepNumber + 1);
-      const current = history[history.length - 1];
-      const squares = JSON.parse(JSON.stringify(current.squares));
-      const { row, col } = this.getColRow(i);
-
-      if (calculateWinner(squares).side || squares[i].value) {
-        return;
-      }
-
-      squares[i].value = this.state.xIsNext ? 'X' : 'O';
-      this.setState({
-        history: history.concat([{ squares, row, col }]),
-        stepNumber: history.length,
-        xIsNext: !this.state.xIsNext
-      });
-    }
-
-    getColRow(i) {
-      return { col: i % 3 + 1, row: Math.ceil((i + 1) / 3) }
-    }
-
-    jumpTo(step) {
-      this.setState({
-        stepNumber: step,
-        xIsNext: step % 2 === 0,
-      })
-    }
-
-    handleOrderChange() {
-      const newOrder = this.state.order === 'asc' ? 'desc' : 'asc';
-
-      this.setState({ order: newOrder });
-
-    }
-
-    render() {
-      const history = this.state.history;
-      const current = history[this.state.stepNumber];
-      const winner = calculateWinner(current.squares);
-
-      const moves = history.map((step, move) => {
-        const { col, row } = history[move];
-
-        const desc = move ?
-          `Go to move #${move} (col: ${col}, row:${row})` :
-          'Go to game start';
-
-        return (
-          <li key={move}>
-            <button
-              className={move === this.state.stepNumber ? 'selected' : ''}
-              onClick={() => this.jumpTo(move)}>{desc}</button>
-          </li>
-        )
-      });
-
-      if (this.state.order === 'desc') {
-        moves.reverse();
-      }
-
-      let status;
-
-      if (winner.side) {
-        status = 'Winner: ' + winner.side;
-
-        winner.combination.map(i => current.squares[i].winning = true);
-
-      } else if (history.length === 10 && this.state.stepNumber === history.length - 1) {
-        status = 'Draw';
-      } else {
-        status = 'Next player: ' + (this.state.xIsNext ? 'X' : 'O');
-      }
-
-
-      return (
-        <div className="game">
-          <div className="game-board">
-            <Board squares={current.squares}
-              onClick={(i) => this.handleClick(i)}
-            />
-          </div>
-          <div className="game-info">
-            <div>{status}</div>
-            <button onClick={() => this.handleOrderChange()}>Moves order: {this.state.order}</button>
-            <ol reversed={this.state.order === 'desc'}>{moves}</ol>
-          </div>
-        </div>
-      );
-    }
-  }
-
-  // ========================================
-
-  ReactDOM.render(
-    <Game />,
-    document.getElementById('root')
-  );
-
-  function calculateWinner(squares) {
-    const lines = [
-      [0, 1, 2],
-      [3, 4, 5],
-      [6, 7, 8],
-      [0, 3, 6],
-      [1, 4, 7],
-      [2, 5, 8],
-      [0, 4, 8],
-      [2, 4, 6],
-    ];
-    for (let i = 0; i < lines.length; i++) {
-      const [a, b, c] = lines[i];
-      if (squares[a].value && squares[a].value === squares[b].value && squares[a].value === squares[c].value) {
-        return { side: squares[a].value, combination: lines[i] };
-      }
-    }
-    return { side: null, combination: null };
-  } */

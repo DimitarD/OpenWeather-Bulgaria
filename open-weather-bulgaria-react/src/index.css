@@ -28,16 +28,13 @@
   opacity: 1;
   transform: scale(1);
   transform-origin: top left;
+  transition: 0.2s opacity ease-in, 0.2s visibility ease-in, 0.2s transform ease-in;
 }
 
 #popup.hidden {
   visibility: hidden;
   opacity: 0;
   transform: scale(0);
-}
-
-#popup.transition {
-  transition: 0.2s opacity ease-in, 0.2s visibility ease-in, 0.2s transform ease-in;
 }
 
 #popup>div {
