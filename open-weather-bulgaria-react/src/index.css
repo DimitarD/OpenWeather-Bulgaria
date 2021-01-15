@@ -1,0 +1,77 @@
+#mapContainer {
+  position: relative;
+  width: 600px;
+  height: 395px;
+  background-image: url("Bulgaria_Administrative_Provinces.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.weather-icon {
+  position: absolute;
+  width: 50px;
+  height: 50px;
+  cursor: pointer;
+  transform: translate(-50%, -50%);
+}
+
+#popup {
+  position: absolute;
+  z-index: 1;
+  visibility: visible;
+  border-radius: 4px;
+  width: 100px;
+  height: auto;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: white;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+  opacity: 1;
+  transform: scale(1);
+  transform-origin: top left;
+}
+
+#popup.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transform: scale(0);
+}
+
+#popup.transition {
+  transition: 0.2s opacity ease-in, 0.2s visibility ease-in, 0.2s transform ease-in;
+}
+
+#popup>div {
+  padding: 5px;
+}
+
+#popupHeader {
+  background-color: rgba(0, 0, 0, .12);
+}
+
+#popupTemperature,
+#popupHumidity {
+  margin-bottom: 10px;
+}
+
+#forecastSliderLabel {
+  display: block;
+  margin-top: 50px;
+}
+
+#forecastSliderContainer {
+  width: 350px;
+}
+
+#forecastSlider {
+  width: 100%;
+}
+
+#forecastSliderLabelsContainer {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}
+
+datalist {
+  display: none;
+}
