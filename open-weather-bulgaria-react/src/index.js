@@ -131,13 +131,13 @@ class App extends React.Component {
 
         if (!clickedIcon) {
             if (!event.target.closest('#popup')) {
-                this.setState({
+                this.setState((state, props) => ({
                     popupSettings: {
-                        left: this.state.popupSettings.left,
-                        top: this.state.popupSettings.top,
+                        left: state.popupSettings.left,
+                        top: state.popupSettings.top,
                         visible: false,
                     },
-                });
+                }));
             }
 
             return;
