@@ -131,7 +131,7 @@ class App extends React.Component {
 
         if (!clickedIcon) {
             if (!event.target.closest('#popup')) {
-                this.setState((state, props) => ({
+                this.setState((state) => ({
                     popupSettings: {
                         left: state.popupSettings.left,
                         top: state.popupSettings.top,
@@ -166,8 +166,8 @@ class App extends React.Component {
             return (
                 <WeatherIcon
                     image={this.cityInfo[currentCityId].weatherData[dayIndex].weather[0].icon}
-                    top={previousIcon.props.top + 'px'}
-                    left={previousIcon.props.left + 'px'}
+                    top={previousIcon.props.top}
+                    left={previousIcon.props.left}
                     cityId={currentCityId}
                     key={currentCityId}
                 />
