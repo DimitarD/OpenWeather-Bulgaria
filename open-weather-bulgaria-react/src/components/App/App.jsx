@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Popup from './../Popup';
 import Slider from './../Slider';
 import WeatherIcon from './../WeatherIcon';
@@ -9,33 +9,13 @@ import popupStyles from './../Popup/Popup.module.scss';
 
 const TODAY = new Date();
 
-class App extends React.Component {
-    constructor(props) {
-        super(props);
+function App(props) {
+    const [dayIndex, setDayIndex] = useState(0);
+    const [displayedCityInfo, setDisplayedCityInfo] = useState(null);
+    const [popupSettings, setPopupSettings] = useState({ left: 0, top: 0, visible: false });
+    const [icons, setIcons] = useState([]);
 
-        this.state = {
-            dayIndex: 0,
-            cityInfo: null,
-            popupSettings: {
-                left: 0,
-                top: 0,
-                visible: false
-            },
-            icons: []
-        };
-    }
-
-    componentDidMount() {
-        this.getCurrentWeather();
-
-        document.addEventListener('pointerdown', this.documentPointerdownHandler);
-    }
-
-    componentWillUnmount() {
-        document.removeEventListener('pointerdown', this.documentPointerdownHandler);
-    }
-
-    cityInfo = {
+    const cityInfo = {
         733191: { name: 'Blagoevgrad', top: 282, left: 73, weatherData: [] },
         732770: { name: 'Burgas', top: 211, left: 493, weatherData: [] },
         726418: { name: 'Dobrich', top: 77, left: 518, weatherData: [] },
@@ -65,46 +45,42 @@ class App extends React.Component {
         725578: { name: 'Yambol', top: 218, left: 399, weatherData: [] }
     }; // codes retrieved from http://bulk.openweathermap.org/sample/city.list.json.gz
 
-    documentPointerdownHandler = (event) => {
+    const documentPointerdownHandler = (event) => {
         const clickedIcon = event.target.closest('.' + weatherIconStyles['weather-icon']);
 
         if (!clickedIcon) {
             if (!event.target.closest('.' + popupStyles['popup'])) {
-                this.setState((state) => ({
-                    popupSettings: {
-                        left: state.popupSettings.left,
-                        top: state.popupSettings.top,
-                        visible: false,
-                    },
-                }));
+                setPopupSettings({
+                    left: popupSettings.left,
+                    top: popupSettings.top,
+                    visible: false,
+                });
             }
 
             return;
         }
 
-        this.setState({
-            cityInfo: this.cityInfo[clickedIcon.getAttribute('cityid')],
-            popupSettings: {
-                left: clickedIcon.style.left,
-                top: clickedIcon.style.top,
-                visible: true,
-            },
+        setDisplayedCityInfo(cityInfo[clickedIcon.getAttribute('cityid')]);
+        setPopupSettings({
+            left: clickedIcon.style.left,
+            top: clickedIcon.style.top,
+            visible: true,
         });
     }
 
-    sliderChangeHandler(event) {
-        const dayIndex = parseFloat(event.target.value);
-        const previousIcons = this.state.icons.slice(0);
+    function sliderChangeHandler(event) {
+        const newDayIndex = parseFloat(event.target.value);
+        const previousIcons = icons.slice(0);
 
-        this.setState({ dayIndex });
+        setDayIndex(newDayIndex);
 
         // updates icons for weather on selected day
-        const icons = Object.keys(this.cityInfo).map((currentCityId, index) => {
+        const newIcons = Object.keys(cityInfo).map((currentCityId, index) => {
             const previousIcon = previousIcons[index];
 
             return (
                 <WeatherIcon
-                    image={this.cityInfo[currentCityId].weatherData[dayIndex].weather[0].icon}
+                    image={cityInfo[currentCityId].weatherData[newDayIndex].weather[0].icon}
                     top={previousIcon.props.top}
                     left={previousIcon.props.left}
                     cityId={currentCityId}
@@ -113,11 +89,11 @@ class App extends React.Component {
             );
         });
 
-        this.setState({ icons });
+        setIcons(newIcons);
     }
 
-    getForecast() {
-        Object.keys(this.cityInfo).forEach((currentCityId) => {
+    function getForecast() {
+        Object.keys(cityInfo).forEach((currentCityId) => {
             // OpenWeather API allows getting forecast for only one city at a time
             fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${currentCityId}&appid=a75e518090b847d8cb624cff50f81d54&units=metric`)
                 .then(response => response.json())
@@ -130,9 +106,9 @@ class App extends React.Component {
                         if (date.getDate() !== TODAY.getDate()
                             && (date.getHours() === 12
                                 || (index === data.list.length - 1
-                                    && this.cityInfo[cityId].weatherData.length === 5))) {
+                                    && cityInfo[cityId].weatherData.length === 5))) {
                             // cache only the forecast for 12:00 of each of the next five days
-                            this.cityInfo[cityId].weatherData.push(dataPoint);
+                            cityInfo[cityId].weatherData.push(dataPoint);
                         }
                     });
                 })
@@ -142,12 +118,12 @@ class App extends React.Component {
         });
     }
 
-    createIcons(data) {
-        const icons = this.state.icons.concat(data.list.map((cityData) => {
+    function createIcons(data) {
+        const newIcons = icons.concat(data.list.map((cityData) => {
             const cityId = cityData.id;
-            const { top, left } = this.cityInfo[cityId];
+            const { top, left } = cityInfo[cityId];
 
-            this.cityInfo[cityId].weatherData.push(cityData);
+            cityInfo[cityId].weatherData.push(cityData);
 
             return (
                 <WeatherIcon
@@ -160,21 +136,21 @@ class App extends React.Component {
             )
         }));
 
-        this.setState({ icons });
+        setIcons(newIcons);
     }
 
-    getCurrentWeather() {
-        const allCityIds = Object.keys(this.cityInfo);
+    function getCurrentWeather() {
+        const allCityIds = Object.keys(cityInfo);
 
         // fetching in two groups due to OpenWeather API restrictions for free accounts
         for (let i = 0; i <= 1; i++) {
             fetch(`https://api.openweathermap.org/data/2.5/group?id=${allCityIds.slice(i * 14, (i + 1) * 14).join(',')}&appid=a75e518090b847d8cb624cff50f81d54&units=metric`)
                 .then(response => response.json())
                 .then(data => {
-                    this.createIcons(data);
+                    createIcons(data);
 
                     if (i === 1) {
-                        this.getForecast();
+                        getForecast();
                     }
                 })
                 .catch((error) => {
@@ -183,22 +159,30 @@ class App extends React.Component {
         }
     }
 
-    render() {
-        const currentDateLabel = (new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + this.state.dayIndex)).toDateString();
+    const currentDateLabel = (new Date(TODAY.getFullYear(), TODAY.getMonth(), TODAY.getDate() + dayIndex)).toDateString();
 
-        return (
-            <div>
-                <h3>Weather in Bulgaria on {currentDateLabel}</h3>
+    useEffect(() => {
+        getCurrentWeather();
+    }, []);
 
-                <div className={styles['map-container']}>
-                    <Popup cityInfo={this.state.cityInfo} dayIndex={this.state.dayIndex} visualSettings={this.state.popupSettings} />
-                    {this.state.icons}
-                </div>
+    useEffect(() => {
+        document.addEventListener('pointerdown', documentPointerdownHandler);
 
-                <Slider min="0" max="5" value={this.state.dayIndex} onChange={(event) => this.sliderChangeHandler(event)} />
+        return () => { document.removeEventListener('pointerdown', documentPointerdownHandler) };
+    }, []);
+
+    return (
+        <div>
+            <h3>Weather in Bulgaria on {currentDateLabel}</h3>
+
+            <div className={styles['map-container']}>
+                <Popup cityInfo={displayedCityInfo} dayIndex={dayIndex} visualSettings={popupSettings} />
+                {icons}
             </div>
-        )
-    }
+
+            <Slider min="0" max="5" value={dayIndex} onChange={(event) => sliderChangeHandler(event)} />
+        </div>
+    );
 }
 
 export default App;
