@@ -1,0 +1,33 @@
+.popup {
+  position: absolute;
+  z-index: 1;
+  visibility: visible;
+  border-radius: 4px;
+  width: 100px;
+  height: auto;
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: white;
+  box-shadow: 0 5px 5px -3px rgba(0, 0, 0, .2), 0 8px 10px 1px rgba(0, 0, 0, .14), 0 3px 14px 2px rgba(0, 0, 0, .12);
+  opacity: 1;
+  transform: scale(1);
+  transform-origin: top left;
+  transition: 0.2s opacity ease-in, 0.2s visibility ease-in, 0.2s transform ease-in;
+}
+
+.popup.hidden {
+  visibility: hidden;
+  opacity: 0;
+  transform: scale(0);
+}
+
+.popup>div {
+  padding: 5px;
+}
+
+.popup-header {
+  background-color: rgba(0, 0, 0, .12);
+}
+
+.popup-info-header:not(:last-child) {
+  margin-bottom: 10px;
+}
