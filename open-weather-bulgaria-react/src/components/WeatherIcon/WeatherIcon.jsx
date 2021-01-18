@@ -1,20 +1,18 @@
 import React from 'react';
 import styles from './WeatherIcon.module.scss';
 
-class WeatherIcon extends React.Component {
-    render() {
-        return (
-            <div
-                className={styles['weather-icon']}
-                style={{
-                    backgroundImage: `url("http://openweathermap.org/img/wn/${this.props.image}.png")`,
-                    top: this.props.top,
-                    left: this.props.left,
-                }}
-                cityid={this.props.cityId}
-            />
-        )
-    }
+function WeatherIcon(props) {
+    return (
+        <div
+            className={styles['weather-icon']}
+            style={{
+                backgroundImage: `url("http://openweathermap.org/img/wn/${props.image}.png")`,
+                top: props.top,
+                left: props.left,
+            }}
+            cityid={props.cityId}
+        />
+    );
 }
 
 export default WeatherIcon;
