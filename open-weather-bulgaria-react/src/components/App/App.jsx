@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Popup from './../Popup';
 import Slider from './../Slider';
 import WeatherIcon from './../WeatherIcon';
@@ -15,7 +15,7 @@ function App(props) {
     const [popupSettings, setPopupSettings] = useState({ left: 0, top: 0, visible: false });
     const [icons, setIcons] = useState([]);
 
-    const cityInfo = {
+    const cityInfo = useRef({
         733191: { name: 'Blagoevgrad', top: 282, left: 73, weatherData: [] },
         732770: { name: 'Burgas', top: 211, left: 493, weatherData: [] },
         726418: { name: 'Dobrich', top: 77, left: 518, weatherData: [] },
@@ -42,8 +42,8 @@ function App(props) {
         725905: { name: 'Vidin', top: 30, left: 52, weatherData: [] },
         725712: { name: 'Vratsa', top: 130, left: 118, weatherData: [] },
         726050: { name: 'Varna', top: 122, left: 533, weatherData: [] },
-        725578: { name: 'Yambol', top: 218, left: 399, weatherData: [] }
-    }; // codes retrieved from http://bulk.openweathermap.org/sample/city.list.json.gz
+        725578: { name: 'Yambol', top: 218, left: 399, weatherData: [] },
+    }); // codes retrieved from http://bulk.openweathermap.org/sample/city.list.json.gz
 
     const documentPointerdownHandler = (event) => {
         const clickedIcon = event.target.closest('.' + weatherIconStyles['weather-icon']);
@@ -60,7 +60,7 @@ function App(props) {
             return;
         }
 
-        setDisplayedCityInfo(cityInfo[clickedIcon.getAttribute('cityid')]);
+        setDisplayedCityInfo(cityInfo.current[clickedIcon.getAttribute('cityid')]);
         setPopupSettings({
             left: clickedIcon.style.left,
             top: clickedIcon.style.top,
@@ -72,15 +72,13 @@ function App(props) {
         const newDayIndex = parseFloat(event.target.value);
         const previousIcons = icons.slice(0);
 
-        setDayIndex(newDayIndex);
-
         // updates icons for weather on selected day
-        const newIcons = Object.keys(cityInfo).map((currentCityId, index) => {
+        const newIcons = Object.keys(cityInfo.current).map((currentCityId, index) => {
             const previousIcon = previousIcons[index];
 
             return (
                 <WeatherIcon
-                    image={cityInfo[currentCityId].weatherData[newDayIndex].weather[0].icon}
+                    image={cityInfo.current[currentCityId].weatherData[newDayIndex].weather[0].icon}
                     top={previousIcon.props.top}
                     left={previousIcon.props.left}
                     cityId={currentCityId}
@@ -89,11 +87,12 @@ function App(props) {
             );
         });
 
+        setDayIndex(newDayIndex);
         setIcons(newIcons);
     }
 
     function getForecast() {
-        Object.keys(cityInfo).forEach((currentCityId) => {
+        Object.keys(cityInfo.current).forEach((currentCityId) => {
             // OpenWeather API allows getting forecast for only one city at a time
             fetch(`https://api.openweathermap.org/data/2.5/forecast?id=${currentCityId}&appid=a75e518090b847d8cb624cff50f81d54&units=metric`)
                 .then(response => response.json())
@@ -106,9 +105,9 @@ function App(props) {
                         if (date.getDate() !== TODAY.getDate()
                             && (date.getHours() === 12
                                 || (index === data.list.length - 1
-                                    && cityInfo[cityId].weatherData.length === 5))) {
+                                    && cityInfo.current[cityId].weatherData.length === 5))) {
                             // cache only the forecast for 12:00 of each of the next five days
-                            cityInfo[cityId].weatherData.push(dataPoint);
+                            cityInfo.current[cityId].weatherData.push(dataPoint);
                         }
                     });
                 })
@@ -119,11 +118,11 @@ function App(props) {
     }
 
     function createIcons(data) {
-        const newIcons = icons.concat(data.list.map((cityData) => {
+        const newIcons = data.list.map((cityData) => {
             const cityId = cityData.id;
-            const { top, left } = cityInfo[cityId];
+            const { top, left } = cityInfo.current[cityId];
 
-            cityInfo[cityId].weatherData.push(cityData);
+            cityInfo.current[cityId].weatherData.push(cityData);
 
             return (
                 <WeatherIcon
@@ -134,23 +133,25 @@ function App(props) {
                     key={cityId}
                 />
             )
-        }));
+        });
 
-        setIcons(newIcons);
+        return newIcons;
     }
 
     function getCurrentWeather() {
-        const allCityIds = Object.keys(cityInfo);
+        const allCityIds = Object.keys(cityInfo.current);
+        const iconsCollection = [];
 
         // fetching in two groups due to OpenWeather API restrictions for free accounts
         for (let i = 0; i <= 1; i++) {
             fetch(`https://api.openweathermap.org/data/2.5/group?id=${allCityIds.slice(i * 14, (i + 1) * 14).join(',')}&appid=a75e518090b847d8cb624cff50f81d54&units=metric`)
                 .then(response => response.json())
                 .then(data => {
-                    createIcons(data);
+                    iconsCollection.push(...createIcons(data));
 
                     if (i === 1) {
                         getForecast();
+                        setIcons(iconsCollection);
                     }
                 })
                 .catch((error) => {
@@ -169,7 +170,7 @@ function App(props) {
         document.addEventListener('pointerdown', documentPointerdownHandler);
 
         return () => { document.removeEventListener('pointerdown', documentPointerdownHandler) };
-    }, []);
+    });
 
     return (
         <div>
