@@ -1,4 +1,6 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+
 import styles from './WeatherIcon.module.scss';
 
 function WeatherIcon(props) {
@@ -14,5 +16,12 @@ function WeatherIcon(props) {
         />
     );
 }
+
+WeatherIcon.propTypes = {
+    cityId: PropTypes.number,
+    image: PropTypes.string,
+    left: PropTypes.string,
+    top: PropTypes.string,
+};
 
 export default WeatherIcon;

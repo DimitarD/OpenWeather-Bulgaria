@@ -12,7 +12,7 @@ const TODAY = new Date();
 function App(props) {
     const [dayIndex, setDayIndex] = useState(0);
     const [displayedCityInfo, setDisplayedCityInfo] = useState(null);
-    const [popupSettings, setPopupSettings] = useState({ left: 0, top: 0, visible: false });
+    const [popupSettings, setPopupSettings] = useState({ left: '0', top: '0', visible: false });
     const [icons, setIcons] = useState([]);
 
     const cityInfo = useRef({

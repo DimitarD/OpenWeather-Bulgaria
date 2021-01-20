@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 import styles from './Popup.module.scss';
 
@@ -21,5 +22,15 @@ function Popup(props) {
         </div >
     );
 }
+
+Popup.propTypes = {
+    cityInfo: PropTypes.object,
+    dayIndex: PropTypes.number,
+    visualSettings: PropTypes.shape({
+        left: PropTypes.string,
+        top: PropTypes.string,
+        visible: PropTypes.bool,
+    }),
+};
 
 export default Popup;
